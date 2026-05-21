@@ -6,17 +6,16 @@ $db   = getDB();
 $msg  = '';
 $err  = '';
 
-// Handle place order
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $items = json_decode($_POST['cart_items'], true);
     if ($items && count($items) > 0) {
         $order_id = 'ORD' . strtoupper(substr(uniqid(), -8));
-        // Insert order
+
         $stmt = $db->prepare("INSERT INTO orders (order_id, status) VALUES (?, 'Pending')");
         $stmt->bind_param('s', $order_id);
         if ($stmt->execute()) {
             $stmt->close();
-            // Insert order items (trigger auto-fills unit_price and checks availability)
+
             $ok = true;
             foreach ($items as $item) {
                 $stmt2 = $db->prepare("INSERT INTO order_item (order_id, menu_id, quantity) VALUES (?,?,?)");
@@ -25,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                     $err = "Could not add item: " . $stmt2->error;
                     $ok  = false;
                     $stmt2->close();
-                    // Rollback order
+
                     $db->query("DELETE FROM orders WHERE order_id='$order_id'");
                     break;
                 }
@@ -47,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 $menu = $db->query("SELECT * FROM v_customer_menu ORDER BY item_name ASC");
 $db->close();
 
-// Uniform plate SVG icon for all menu items
 function getPlateIcon() {
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="56" height="56">
         <!-- Plate -->
@@ -135,7 +133,7 @@ function getPlateIcon() {
         <p>Self-Ordering System — Pick your dishes and place your order!</p>
     </div>
     <div>
-        <a href="track.php" class="btn btn-gold">📋 Track Order</a>
+        <a href="track.php" class="btn btn-gold">Track Order</a>
         <a href="../admin/login.php" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3);color:#fff;margin-left:8px;">Admin</a>
     </div>
 </div>
